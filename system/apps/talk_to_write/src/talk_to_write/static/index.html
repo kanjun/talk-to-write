@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- maximum-scale stops phones zooming in when a text box is tapped (here or in the chat); pinch zoom still works -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Talk to Write">
+<meta name="theme-color" content="#FBF6EC">
+<title>Talk to Write</title>
+<link rel="icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css?v={{VERSION}}">
+</head>
+<body data-tab="canvas">
+<nav class="tabs" id="tabs">
+  <button data-tab="talk">Talk</button>
+  <button data-tab="canvas" class="on">Canvas</button>
+  <button data-tab="k">Garden</button>
+  <button class="close-beside" id="closeBeside" title="Close this side">&times;</button>
+  <button class="gear" id="settingsBtn" title="Settings: how your writing chat talks back"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+</nav>
+
+<div class="panes">
+  <section class="pane" id="talkPane">
+    <div class="room-strip" id="roomStrip"></div>
+    <div class="room-picker" id="roomPicker" hidden>
+      <input id="roomName" placeholder="Anyone, living or not. Type a name, then Enter" autocomplete="off">
+      <div class="ideas" id="roomIdeas"></div>
+      <div class="hint">Your writing chat speaks for them, as an imagined take in their spirit. Your edits stay in your words.</div>
+    </div>
+    <div class="talk-msg" id="talkMsg">Starting your writing chat...</div>
+    <iframe id="chatFrame" title="Writing chat" allow="clipboard-write" hidden></iframe>
+  </section>
+
+  <section class="pane" id="sidePane">
+    <!-- Canvas list -->
+    <div class="view" id="canvasList">
+      <div class="list">
+        <ul class="titles" id="canvasItems"></ul>
+        <button class="trash-row" data-trash="canvas"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></svg>Trash <span class="count">0</span></button>
+      </div>
+    </div>
+
+    <!-- Garden list -->
+    <div class="view" id="kList" hidden>
+      <div class="list" id="kScroll">
+        <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input id="kSearch" type="search" placeholder="Search the Garden" autocomplete="off"></div>
+        <ul class="titles" id="kItems"></ul>
+        <div class="empty" id="kEmpty" hidden></div>
+        <button class="trash-row" data-trash="k"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></svg>Trash <span class="count">0</span></button>
+      </div>
+    </div>
+
+    <!-- Trash -->
+    <div class="view" id="trashView" hidden>
+      <div class="doc-bar">
+        <button class="back" data-back><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg><span class="back-label">Canvas</span></button>
+        <span class="label">Trash</span>
+        <span class="spacer"></span>
+        <button class="btn danger" id="emptyTrash">Empty Trash</button>
+      </div>
+      <div class="list"><ul class="titles" id="trashList"></ul><div class="empty" id="trashEmpty" hidden>Trash is empty.</div></div>
+    </div>
+
+    <!-- A page the agent made -->
+    <div class="view" id="pageView" hidden>
+      <div class="doc-bar">
+        <button class="back" data-back><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg><span class="back-label">Canvas</span></button>
+        <span class="spacer"></span>
+        <button class="btn icon" data-delete title="Move to Trash"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></svg></button>
+      </div>
+      <iframe class="page-frame" id="pageFrame" sandbox="allow-scripts allow-popups" title="Page"></iframe>
+    </div>
+
+    <!-- A document or garden note -->
+    <div class="view" id="docView" hidden>
+      <div class="doc-bars" id="docBars">
+      <div class="doc-bar">
+        <button class="back" data-back><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg><span class="back-label">Canvas</span></button>
+        <span class="public" id="publicTag" hidden title="This note is marked public (publish: true): if you publish your notes somewhere, changes to it may go live there">Public</span>
+        <span class="spacer"></span>
+        <span class="status hide-m" id="saveStatus"></span>
+        <a class="btn icon hide-m" id="sourceLink" hidden target="_blank" rel="noopener" title="Open the original">Original</a>
+        <button class="btn icon" id="historyBtn" title="Version history"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg></button>
+        <button class="btn icon beside-btn" id="besideBtn" title="Open another document side by side"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg></button>
+        <button class="btn icon" id="fullBtn" title="Full screen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button class="btn" id="sugBtn">Suggest edits</button>
+        <button class="btn icon" data-delete title="Move to Trash"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4zM6 9h12l-1 12H7z"/></svg></button>
+      </div>
+      <div class="toolbar" id="toolbar">
+        <span class="fmt">
+        <button data-md="undo" title="Undo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button><button data-md="redo" title="Redo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+        <span class="sep"></span>
+        <button data-md="h1" title="Header">H1</button><button data-md="h2" title="Smaller header">H2</button>
+        <button data-md="b" title="Bold"><b>B</b></button><button data-md="i" title="Italic"><i>I</i></button><button data-md="quote" title="Quote">&ldquo;</button><button data-md="list" title="List">&bull;</button>
+        <button data-md="link" title="Link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button><button data-md="footnote" title="Add a footnote">&sup1;</button>
+        <span class="sep"></span>
+        <button data-md="image" title="Add an image"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg> Image</button>
+        <button data-md="video" title="Add a video"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg> Video</button>
+        <button data-md="caption" title="Add a caption under an image or video">Caption</button>
+        </span>
+        <button class="done" data-md="done" title="Done typing"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></button>
+      </div>
+      <div class="history-bar" id="historyBar" hidden>
+        <button class="back" id="historyBack"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg><span id="historyBackLabel">Back to the document</span></button>
+        <span class="spacer"></span>
+        <button class="btn primary" id="restoreBtn" hidden>Restore this version</button>
+      </div>
+      </div>
+      <div class="doc-scroll" id="docScroll">
+        <ul class="titles" id="historyList" hidden></ul>
+        <article id="article"></article>
+        <input class="doc-title-input" id="titleInput" hidden placeholder="Title">
+        <div class="mdsrc" id="mdsrc" hidden></div>
+      </div>
+      <input type="file" id="fileInput" hidden>
+    </div>
+    <div class="beside-drop" id="besideDrop">Drop here to open it side by side</div>
+  </section>
+
+  <section class="pane" id="besidePane" hidden>
+    <iframe id="besideFrame" title="Second document"></iframe>
+  </section>
+</div>
+
+<button class="exit-full" id="exitFull" title="Leave full screen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
+<div class="sug-pop" id="sugPop" hidden></div>
+<div class="toast" id="toast" hidden><span id="toastText"></span><button id="undoBtn" hidden>Undo</button></div>
+
+<div class="settings" id="settingsPane" hidden>
+  <div class="doc-bar">
+    <button class="back" id="settingsClose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button>
+    <span class="label">Settings</span>
+  </div>
+  <div class="settings-body">
+    <h2>How your writing chat talks back</h2>
+    <p class="hint">These change what it says back to you. Your words in the edits it proposes stay yours.</p>
+    <div class="set-label">Mode</div>
+    <div class="set-modes" id="setModes"></div>
+    <div class="set-label">Dials</div>
+    <div id="setDials"></div>
+    <div class="set-foot"><button class="btn" id="setReset">Back to neutral</button><span class="status" id="setStatus"></span></div>
+  </div>
+</div>
+
+<div class="floater">
+  <div class="bubble" id="bubble" hidden>
+    <div class="about" id="about" hidden><span id="aboutText"></span><button id="clearAbout" title="Stop pointing">&times;</button></div>
+    <div id="liveText"></div>
+    <button class="discard" id="discardRec" hidden title="Throw this recording away instead of sending it">Discard</button>
+  </div>
+  <div class="mic-wrap">
+    <button class="voice" id="voiceToggle" title="Replies are read aloud. Tap to mute."><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M4 9v6h4l5 4V5L8 9zM16 8.5a4.5 4.5 0 0 1 0 7v-2a2.5 2.5 0 0 0 0-3z"/></svg></button>
+    <button class="mic" id="mic" title="Talk"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><rect x="8" y="2" width="8" height="13" rx="4"/><path d="M5 11a7 7 0 0 0 14 0h-2a5 5 0 0 1-10 0zM11 18h2v4h-2z"/></svg><span class="bars"><i></i><i></i><i></i><i></i></span></button>
+  </div>
+</div>
+
+<script>window.PAGE_VERSION = "{{VERSION}}";</script>
+<script src="/static/editor.js?v={{VERSION}}"></script>
+<script src="/static/app.js?v={{VERSION}}"></script>
+{{SHELL_PAGE_SCRIPT}}
+</body>
+</html>

@@ -1,54 +1,70 @@
-# Your workspace
+<p align="center">
+  <img alt="Talk to Write" src="template.svg" width="480">
+</p>
 
-This folder is your agent's home: everything it knows, everything it builds,
-and the machinery that keeps it running.
+# Talk to Write
 
-## Creations
+<p align="center">
+  <a href="https://studio.imbue.com/open?git_url=https://github.com/kanjun/talk-to-write"><img alt="Open in Imbue Studio" height="64" src="https://img.shields.io/badge/Open%20in%20Imbue%20Studio-D8D1C0?style=for-the-badge"></a>
+</p>
 
-Broadly, in Imbue Studio you make "creations". These can be "code" (apps, skills, and
-the services behind them) or "data" (documents, images, notes).
+Didn't work? Create a Studio workspace and paste this to your agent:
+` /use-template https://github.com/kanjun/talk-to-write`
 
-Imbue Studio makes this easier by defining some conventions for the common things
-you'll want to make:
+## Why you care
 
-1. an "app" - something you can open as a tab and interact with
-2. a "skill" - teaches your agent how to do work you care about. A skill that
-   is automatically run on a schedule is called an "automation": a routine
-   (see `routines/` and the Routines app; the weekly Caretaker is the
-   built-in example)
-3. some "data" - documents, images, notes, or data created by your apps and
-   skills
-4. some "customizations" - changes to any of the above. Everything in Imbue Studio
-   can be modified by you!
+Some of your best ideas come out when you talk, and then they get lost or flattened
+when you try to type them up. Talk to Write lets you think out loud at your draft and
+turns what you said into suggestions made of your own words, so the writing still
+sounds like you and not like an AI.
 
-## What's here
+## How to use it
 
-- `apps/` - Everything you can open as a tab: the built-in apps (chat, the
-  terminal, Files, the browser, System Monitor) and the apps your agent builds for you. (A shortcut
-  to `system/apps/`.)
-- `skills/` - Everything your agent knows how to do: the built-in skills and
-  the ones it has learned for you. (A shortcut to `.agents/skills/`.)
-- `routines/` - Everything that runs on a schedule, one file each; the
-  Routines app shows them. (A shortcut to `system/routines/`.)
-- `data/` - Your workspace's data: documents and project folders, files
-  you've uploaded, your agent's memories, and each app's stored data.
-- `docs/` - Guides to this workspace: what it is, how it works, and a history
-  of where it came from.
-- `system/` - The machinery that runs the workspace: the apps themselves,
-  background services, scripts, and configuration. You can look around (every
-  folder has a README), and your agent maintains it for you.
+Open **Talk to Write** from your desktop, or on your phone (it is built to be used from a phone too).
 
-A few housekeeping files live alongside them:
+- **Talk at your draft.** Open a document on the **Canvas**, tap the mic and talk:
+  "this paragraph is missing the point about trust", "add what I said on my walk to the
+  opening", "give me a few ways to say this line". Highlight words first to point at
+  them. The writing chat answers out loud in a sentence or two.
+- **Accept what you like.** Its changes show up in the document in blue: the new
+  wording right under what it would replace. Accept, skip, or edit a suggestion before
+  taking it. New ideas come in as your own spoken sentences, cleaned up; nothing is
+  written in someone else's voice.
+- **Ask for edits in your voice.** "Suggest edits" (the button, or say it) gives line
+  edits section by section: small fixes you can combine, fuller rewrites, and a short
+  reason for each. Point it at folders of your own writing and each edit also shows
+  the line of yours it is modelled on.
+- **Write in your notes.** Connect an Obsidian-style notes folder and the **Garden**
+  tab lets you read, search, talk to, and edit those notes in place. Deleted notes go
+  to the folder's trash, so they can be brought back.
+- **Get something to look at.** Ask the chat to make a page ("make me a map of how
+  this essay's argument flows") and it appears on the Canvas next to your documents.
+- **Choose how it talks back.** In Settings, pick a mode (find what I mean, clarify,
+  expand, challenge, make it usable), tune dials like fast/deep or affirm/challenge,
+  or invite a few people whose thinking you admire to discuss your idea with you.
 
-- `README.md` - This file.
-- `CLAUDE.md` - The standing instructions your agent follows.
-- `pyproject.toml` and `uv.lock` - The Python project definition; the tooling
-  requires them at the top level.
+Every piece keeps a history of everything you said about it, plus earlier versions
+you can go back to, so you can pick up where you left off.
 
-## Where things are kept safe
+## Ideas for making it yours
 
-The workspace is a git repository: code and configuration changes are
-committed as your agent works. Everything under `data/` is deliberately kept
-out of git (it can be large, personal, or both) and is protected by the
-workspace's continuous encrypted backup instead, along with the rest of the
-workspace. See `docs/` for details.
+- Swap the talk-back modes and dials for the kinds of pushback you actually want
+  (for example, a "find the strongest objection" mode).
+- Change the look of pages the chat makes to match your own site or brand.
+- Teach the writing chat your house style: words you never use, how you like
+  headings, British or American spelling.
+- Add a button that sends a finished piece somewhere: a blog's drafts folder, an
+  email to yourself, or a shared document.
+- Make the Garden show only the notes you've marked public, as a quick check of what
+  a published site would show.
+
+## What this is
+
+This repository is a published **Imbue Studio template**: a clean, bootable
+snapshot of what an agent built, ready to adapt into your own. It is NOT the
+generic workspace template -- it is this specific project.
+
+[`template.md`](template.md) is the full manifest -- what it is, how it
+works, what it needs to run, and what to adapt -- with the
+machine-readable half (recipe, requirements, and the environment it needs
+installed) in [`template.toml`](template.toml).
