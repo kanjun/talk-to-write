@@ -2,7 +2,7 @@
 title: "Talk to Write"
 description: "Talk out loud and turn the best of what you say into essays in your own voice"
 thumbnail: "template.svg"
-version: v3
+version: v4
 format: v2
 ---
 
@@ -80,7 +80,7 @@ folder directly.
 
 ## Recipe
 
-This template is version `v3`. It is not a fork of the
+This template is version `v4`. It is not a fork of the
 workspace it came from -- it is DERIVED from it by a recipe: include these
 paths, leave these out, apply these published-version rules. An update re-runs
 the recipe against the current workspace and publishes the result as the next
@@ -171,6 +171,8 @@ This is distinct from "Adaptation history" below, which is the ADOPTERS' log.
 ### v2 (2026-11-23) -- rendered markdown tables, cleaner phone recording handoff, and updated voice-edit commands
 
 ### v3 (2026-11-23) -- an actual app recording in the README, using explicitly authorized rendered excerpts from “Who does your AI serve?”
+
+### v4 (2026-11-23) -- actual desktop and phone views in the README, with the writing conversation beside the essay and a framed phone view
 
 ## Adaptation history
 

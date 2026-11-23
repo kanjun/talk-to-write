@@ -1,12 +1,13 @@
 # Talk to Write
 
 <p align="center">
-  <img alt="Actual Talk to Write editor: reviewing a saved wording suggestion on an essay demo copy, accepting it, undoing it, skipping it, and opening the text editor" src="docs/demo/talk-to-write.gif" width="960">
+  <img alt="Talk to Write on desktop, with a saved writing-agent response beside the essay, and the same essay in the mobile app inside a phone frame" src="docs/demo/talk-to-write-desktop-phone.png" width="1200">
 </p>
 
-Recorded in the actual editor with an excerpt from “Who does your AI serve?”.
-Replays a saved suggestion on a demo copy: review, accept, undo, skip, and edit.
-The source essay is unchanged. [View a still image](docs/demo/talk-to-write.png).
+Desktop: discuss your draft with the writing agent beside it.
+Phone: read and revise the same essay on the go.
+Shown with an excerpt and a replayed saved agent response from “Who does your AI serve?”.
+[Desktop screenshot](docs/demo/talk-to-write-desktop.png) · [Phone screenshot](docs/demo/talk-to-write-mobile.png)
 
 <p align="center">
   <a href="https://studio.imbue.com/open?git_url=https://github.com/kanjun/talk-to-write"><img alt="Open in Imbue Studio" height="64" src="https://img.shields.io/badge/Open%20in%20Imbue%20Studio-D8D1C0?style=for-the-badge"></a>
@@ -21,6 +22,16 @@ Some of your best ideas come out when you talk, and then they get lost or flatte
 when you try to type them up. Talk to Write lets you think out loud at your draft and
 turns what you said into suggestions made of your own words, so the writing still
 sounds like you and not like an AI.
+
+## See the editor in action
+
+<p align="center">
+  <img alt="Actual Talk to Write editor: reviewing a saved wording suggestion on an essay demo copy, accepting it, undoing it, skipping it, and opening the text editor" src="docs/demo/talk-to-write.gif" width="960">
+</p>
+
+Recorded in the actual editor with an excerpt from “Who does your AI serve?”.
+Replays a saved suggestion on a demo copy: review, accept, undo, skip, and edit.
+The source essay is unchanged. [View a still image](docs/demo/talk-to-write.png).
 
 ## How to use it
 
