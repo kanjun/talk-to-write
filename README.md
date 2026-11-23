@@ -1,8 +1,12 @@
+# Talk to Write
+
 <p align="center">
-  <img alt="Talk to Write" src="template.svg" width="480">
+  <img alt="Actual Talk to Write editor: reviewing a saved wording suggestion on an essay demo copy, accepting it, undoing it, skipping it, and opening the text editor" src="docs/demo/talk-to-write.gif" width="960">
 </p>
 
-# Talk to Write
+Recorded in the actual editor with an excerpt from “Who does your AI serve?”.
+Replays a saved suggestion on a demo copy: review, accept, undo, skip, and edit.
+The source essay is unchanged. [View a still image](docs/demo/talk-to-write.png).
 
 <p align="center">
   <a href="https://studio.imbue.com/open?git_url=https://github.com/kanjun/talk-to-write"><img alt="Open in Imbue Studio" height="64" src="https://img.shields.io/badge/Open%20in%20Imbue%20Studio-D8D1C0?style=for-the-badge"></a>

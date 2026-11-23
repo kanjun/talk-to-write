@@ -10,13 +10,13 @@ slug = "talk-to-write"
 title = "Talk to Write"
 description = "Talk out loud and turn the best of what you say into essays in your own voice"
 thumbnail = "template.svg"
-version = "v2"
+version = "v3"
 
 # How this template is DERIVED from the workspace it came from. An
 # update re-runs this recipe rather than diffing two repos, which is what
 # keeps an exclusion excluded even though the thing still exists upstream.
 [recipe]
-include = ["system/apps/talk_to_write", "system/supervisord.conf.d/talk-to-write.conf", ".agents/skills/talk-to-write", ".agents/skills/suggest-voice-edits"]
+include = ["system/apps/talk_to_write", "system/supervisord.conf.d/talk-to-write.conf", ".agents/skills/talk-to-write", ".agents/skills/suggest-voice-edits", "docs/demo/talk-to-write.gif", "docs/demo/talk-to-write.png"]
 data_include = []
 exclude = [
     "data/.apps/talk-to-write (the publisher's documents, chats, recordings, histories and voice bank)",
@@ -31,9 +31,10 @@ modification_rules = [
     "rename the publisher-named notes tab to 'Garden' everywhere (UI, API routes, side names, comments, skill text)",
     "remove every link to or mention of the publisher's personal site; describe a note marked publish: true only as 'marked public'",
     "make voice-sample sources a setting (voice_sources in the app's settings.json) with no default; with none set, voice edits run without voice examples",
-    "remove hardcoded paths under the publisher's home folder, references to the publisher's memory files, quoted passages of the publisher's writing, and the publisher's essay titles",
+    "remove hardcoded paths under the publisher's home folder, references to the publisher's memory files, quoted passages of the publisher's writing, and the publisher's essay titles, except the explicitly user-authorized rendered demonstration media under docs/demo and its README caption",
     "replace real people's names in examples and test fixtures with invented names",
     "remove hard dependencies on the publisher's other apps (website editor, knowledge corpus and the like)",
+    "preserve the explicitly user-authorized README demonstration of Who does your AI serve? as rendered GIF/PNG media only; do not include the source essay, raw drafts, writing history, voice samples, or other personal data",
 ]
 
 # Everything an adopter must deal with before this is really theirs.
