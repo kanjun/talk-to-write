@@ -10,7 +10,7 @@ slug = "talk-to-write"
 title = "Talk to Write"
 description = "Talk out loud and turn the best of what you say into essays in your own voice"
 thumbnail = "template.svg"
-version = "v1"
+version = "v2"
 
 # How this template is DERIVED from the workspace it came from. An
 # update re-runs this recipe rather than diffing two repos, which is what

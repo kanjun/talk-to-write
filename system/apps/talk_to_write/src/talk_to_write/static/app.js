@@ -1741,7 +1741,8 @@ function startListening() {
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (e) => {
-      if (rec !== me) return;
+      // Words the phone hands over after the recording was sent (or thrown away) would sit in the bubble: ignored.
+      if (rec !== me || (!listening && !sendQueued)) return;
       interimText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
@@ -1793,6 +1794,7 @@ function stopAndSend() {
 async function finishSend() {
   if (!sendQueued) return;
   sendQueued = false;
+  rec = null;
   mic.classList.remove("sending");
   const text = (finalText + " " + interimText).trim();
   finalText = interimText = "";

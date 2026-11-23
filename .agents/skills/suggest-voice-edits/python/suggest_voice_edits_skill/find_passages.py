@@ -1,7 +1,7 @@
 """Search the user's own passages (the voice bank) for words or phrases.
 
-    uv run python .agents/skills/suggest-voice-edits/scripts/find_passages.py "deeply" "understand" --limit 8
-    uv run python .agents/skills/suggest-voice-edits/scripts/find_passages.py --kind essay --kind garden "you don't"
+    uv run --no-sync python .agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/find_passages.py "deeply" "understand" --limit 8
+    uv run --no-sync python .agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/find_passages.py --kind essay --kind garden "you don't"
 
 Every term is a word or a quoted phrase; a passage scores by how many terms it
 contains (finished prose breaks ties). Prints each hit with where it came from.

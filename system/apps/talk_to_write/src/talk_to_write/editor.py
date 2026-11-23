@@ -22,8 +22,15 @@ import threading
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import TypedDict
 
 from talk_to_write import claude_p
+
+
+class _EditBatchState(TypedDict):
+    count: int
+    errors: list[str]
+
 
 # Which model and how hard it thinks. Opus for judgment about voice; high effort, since
 # mediocre edits cost them more than a slower wait does.
@@ -340,7 +347,7 @@ class Editor:
         key = (side, item_id)
         with self._lock:
             self.running[key] = self.running.get(key, 0) + len(chunks)
-        state = {"count": 0, "errors": []}
+        state: _EditBatchState = {"count": 0, "errors": []}
 
         def run(chunk: str) -> None:
             try:

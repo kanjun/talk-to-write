@@ -2,7 +2,7 @@
 title: "Talk to Write"
 description: "Talk out loud and turn the best of what you say into essays in your own voice"
 thumbnail: "template.svg"
-version: v1
+version: v2
 format: v2
 ---
 
@@ -63,8 +63,8 @@ from the original agent onto a clean default-workspace-template base):
   sentences), where documents and notes live, and the app's settings.
 - `.agents/skills/suggest-voice-edits` -- the voice-edit skill: `editing-guide.md`
   (what makes a good edit, shared with the app's own edit pass),
-  `scripts/build_voice_bank.py` (builds `data/.apps/talk-to-write/voice/passages.jsonl`
-  from the folders of your writing you list in settings) and `scripts/find_passages.py`
+  `.agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/build_voice_bank.py` (builds `data/.apps/talk-to-write/voice/passages.jsonl`
+  from the folders of your writing you list in settings) and `.agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/find_passages.py`
   (searches it).
 
 At runtime: the page talks to the Flask app on 8099. Speech recognition and reading
@@ -80,7 +80,7 @@ folder directly.
 
 ## Recipe
 
-This template is version `v1`. It is not a fork of the
+This template is version `v2`. It is not a fork of the
 workspace it came from -- it is DERIVED from it by a recipe: include these
 paths, leave these out, apply these published-version rules. An update re-runs
 the recipe against the current workspace and publishes the result as the next
@@ -117,7 +117,7 @@ Adaptation:
   user's own writing they are much weaker and carry no "based on your line" quote.
   Ask the user where their finished writing lives (essays, a blog's markdown, a notes
   folder), add those folders to `voice_sources` in the settings file with a `kind`
-  each, and run `scripts/build_voice_bank.py`.
+  each, and run `.agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/build_voice_bank.py`.
 - **The "who to invite" suggestions** in the talk-back panel (well-known public
   figures) are the publisher's picks; offer to change them to people the user admires
   (`ROOM_IDEAS` in `static/app.js` and `IDEAS` in `static/talkback.html`).
@@ -167,6 +167,8 @@ appends one entry per version (newest last); earlier entries are never rewritten
 This is distinct from "Adaptation history" below, which is the ADOPTERS' log.
 
 ### v1 (2026-10-29) -- first version: the Talk to Write app, its writing-chat skill and the voice-edit skill, with the notes folder and voice samples left for the adopter to connect
+
+### v2 (2026-11-23) -- rendered markdown tables, cleaner phone recording handoff, and updated voice-edit commands
 
 ## Adaptation history
 

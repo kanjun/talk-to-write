@@ -57,6 +57,76 @@ class Media extends WidgetType {
   }
 }
 
+// Tables show as tables; the markdown for one shows only while the cursor is inside it.
+function splitRow(line) {
+  let t = line.trim();
+  if (t.startsWith("|")) t = t.slice(1);
+  if (t.endsWith("|") && !t.endsWith("\\|")) t = t.slice(0, -1);
+  const cells = []; let cur = "";
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] === "\\" && t[i + 1] === "|") { cur += "|"; i++; continue; }
+    if (t[i] === "|") { cells.push(cur.trim()); cur = ""; continue; }
+    cur += t[i];
+  }
+  cells.push(cur.trim());
+  return cells;
+}
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function inlineHtml(s) {
+  const codes = [];
+  let h = escapeHtml(s).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
+  h = h.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, w, u) => /^(https?:|mailto:|\/|#)/i.test(u) ? `<a class="md-link" href="${u}" target="_blank" rel="noopener">${w}</a>` : w)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/__([^_]+)__/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>").replace(/~~([^~]+)~~/g, "<s>$1</s>")
+    .replace(/&lt;br\s*\/?&gt;/gi, "<br>");
+  return h.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code class="md-code">${codes[+i]}</code>`);
+}
+class Table extends WidgetType {
+  constructor(src) { super(); this.src = src; }
+  eq(o) { return o.src === this.src; }
+  toDOM() {
+    const lines = this.src.split("\n").filter((l) => l.trim());
+    const align = splitRow(lines[1] || "").map((c) => /^:-+:$/.test(c) ? "center" : /-+:$/.test(c) ? "right" : "");
+    const wrap = document.createElement("div");
+    wrap.className = "md-table-wrap";
+    const head = splitRow(lines[0]);
+    const body = lines.slice(2).map((l) => { const c = splitRow(l); while (c.length < head.length) c.push(""); return c.slice(0, head.length); });
+    // A column of short entries (numbers, times) stays on one line instead of breaking mid-word.
+    const short = head.map((h, i) => [h, ...body.map((r) => r[i])].every((c) => c.length <= 14));
+    const cell = (tag, text, i) => {
+      const style = [align[i] && `text-align:${align[i]}`, short[i] && "white-space:nowrap"].filter(Boolean).join(";");
+      return `<${tag}${style ? ` style="${style}"` : ""}>${inlineHtml(text)}</${tag}>`;
+    };
+    wrap.innerHTML = `<table class="md-table"><thead><tr>${head.map((c, i) => cell("th", c, i)).join("")}</tr></thead>`
+      + `<tbody>${body.map((r) => `<tr>${r.map((c, i) => cell("td", c, i)).join("")}</tr>`).join("")}</tbody></table>`;
+    return wrap;
+  }
+  // Links in a cell open; any other tap puts the cursor in the table so its text can be edited.
+  ignoreEvent(e) { return e.type === "mousedown" && !!e.target.closest && !!e.target.closest("a"); }
+}
+// Multi-line replacements must come from the state, not a view plugin.
+const tables = StateField.define({
+  create: (state) => tableDecos(state),
+  update(decos, tr) {
+    if (tr.docChanged || tr.selection || syntaxTree(tr.startState) !== syntaxTree(tr.state)) return tableDecos(tr.state);
+    return decos;
+  },
+  provide: (f) => EditorView.decorations.from(f),
+});
+function tableDecos(state) {
+  const out = [];
+  syntaxTree(state).iterate({
+    enter(node) {
+      if (node.name !== "Table") return;
+      const from = state.doc.lineAt(node.from).from, to = state.doc.lineAt(node.to).to;
+      const inside = state.selection.ranges.some((r) => r.from <= to && r.to >= from);
+      if (!inside) out.push(Decoration.replace({ widget: new Table(state.doc.sliceString(from, to)), block: true }).range(from, to));
+      return false;
+    },
+  });
+  return Decoration.set(out, true);
+}
+
 const hide = Decoration.replace({});
 const LINE = { ATXHeading1: "md-h1", ATXHeading2: "md-h2", ATXHeading3: "md-h3", ATXHeading4: "md-h3" };
 const MARK = { Emphasis: "md-em", StrongEmphasis: "md-strong", Link: "md-link", InlineCode: "md-code", Strikethrough: "md-strike" };
@@ -246,6 +316,11 @@ const theme = EditorView.theme({
   ".md-h1 .md-fold": { marginTop: "9px" },
   ".md-h2 .md-fold": { marginTop: "9px" },
   ".md-folded": { fontFamily: "var(--sans, system-ui)", fontSize: "13px", color: "var(--accent, #D26645)", background: "#F9D9C9", borderRadius: "8px", padding: "0 8px", marginLeft: "6px", cursor: "pointer" },
+  ".md-table-wrap": { overflowX: "auto", margin: "8px 0 12px", cursor: "text" },
+  ".md-table": { borderCollapse: "collapse", fontSize: "15px", lineHeight: "1.4", width: "100%" },
+  ".md-table th, .md-table td": { border: "1px solid #e2d8cc", padding: "6px 10px", verticalAlign: "top", textAlign: "left" },
+  ".md-table th": { fontWeight: "600", background: "#00000008" },
+  ".md-table tbody tr:nth-child(even) td": { background: "#00000004" },
   ".md-media": { display: "block", maxWidth: "100%", maxHeight: "70vh", margin: "6px auto", borderRadius: "4px" },
   ".md-h1": { fontSize: "26px", fontWeight: "500", lineHeight: "1.2", paddingTop: "0" },
   ".md-h2": { fontSize: "20px", fontWeight: "500", lineHeight: "1.45" },
@@ -327,6 +402,7 @@ export function createEditor(parent, doc, { onChange, drawMark } = {}) {
       },
     }),
     livePreview,
+    tables,
     theme,
     keymap.of([
       { key: "Mod-b", run: (v) => (wrapCommand(v, "**", "bold"), true) },

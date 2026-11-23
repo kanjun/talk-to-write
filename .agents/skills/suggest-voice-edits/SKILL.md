@@ -50,9 +50,9 @@ their way. Don't wait for them, and don't post edits yourself.
 - Style guide: `data/.apps/talk-to-write/voice/profile.md` (its speaking-voice
   section is kept up to date by the app).
 - Their passages: `data/.apps/talk-to-write/voice/passages.jsonl`, searchable with
-  `uv run python .agents/skills/suggest-voice-edits/scripts/find_passages.py <words> [--kind essay]`.
+  `uv run --no-sync python .agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/find_passages.py <words> [--kind essay]`.
   Prefer finished prose (`essay`, `page`, `garden`). Rough notes may hold private
   material (journals, health, relationships): never quote those to them alongside a draft.
 - Build or rebuild the bank after changing the sources, or when their writing has grown:
-  `uv run python .agents/skills/suggest-voice-edits/scripts/build_voice_bank.py`
+  `uv run --no-sync python .agents/skills/suggest-voice-edits/python/suggest_voice_edits_skill/build_voice_bank.py`
   (reads only their own words).

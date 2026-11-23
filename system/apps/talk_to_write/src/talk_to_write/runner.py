@@ -39,11 +39,11 @@ from flask import (
 )
 from werkzeug.serving import run_simple
 
+from talk_to_write import talkback, threads
 from talk_to_write.chat_bridge import ChatBridge, ChatError
 from talk_to_write.editor import Editor
 from talk_to_write.garden import Garden, GardenError, is_public, notes_folder
 from talk_to_write.render import render
-from talk_to_write import talkback, threads
 from talk_to_write.speaking import SpeakingVoice
 from talk_to_write.store import (
     FRONTMATTER,
