@@ -561,9 +561,14 @@ def suggest() -> Response | tuple[Response, int]:
     body = split_doc(text)[1]
     if scope and scope not in body:
         # A pointed-at passage arrives as rendered text; find the paragraph it came from.
-        want = norm(scope)
+        # Reading-view selection omits superscript footnotes. Ignore their Markdown
+        # references for matching only; keep the original source in the edit request.
+        def visible_words(passage: str) -> str:
+            return norm(re.sub(r"\[\^[^\]\s]+\]", "", passage))
+
+        want = visible_words(scope)
         scope = next(
-            (p for p in re.split(r"\n\s*\n", body) if want and want in norm(p)), None
+            (p for p in re.split(r"\n\s*\n", body) if want and want in visible_words(p)), None
         )
         if not scope:
             return fail("Couldn't find that passage in the document.")

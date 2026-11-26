@@ -101,3 +101,25 @@ def test_only_her_own_typing_counts():
     for i, said in enumerate(["[Talk to Write | spoken]\nhi", "/talk-to-write", "<local-command-stdout>x", "Context was compacted", "I meant ickiness."]):
         bridge._handle({"type": "user_message", "event_id": str(i), "content": said}, set())
     assert heard == ["I meant ickiness."]
+
+
+def test_suggested_edits_match_visible_passages_without_losing_footnotes(monkeypatch):
+    calls = []
+    monkeypatch.setattr(runner.editor, "busy", lambda *args: False)
+    monkeypatch.setattr(runner.editor, "start", lambda *args: calls.append(args) or 1)
+    monkeypatch.setattr(runner.hub, "publish", lambda event: None)
+    client = runner.app.test_client()
+    for label in ("1", "opening-hours"):
+        passage = f"The museum opens early on weekends and lets visitors reserve tickets online.[^{label}] This makes planning a visit easier."
+        document = f"---\ntitle: Essay\n---\n\nBefore.\n\n{passage}\n\nAfter."
+        monkeypatch.setattr(runner, "read_item", lambda *args: (document, 0.0))
+        visible = passage.replace(f"[^{label}]", "")
+        response = client.post("/api/suggest", json={"id": "essay", "scope": visible})
+        assert response.status_code == 200
+        assert calls[-1][4] == passage  # The model still sees the footnote in source.
+        assert passage in calls[-1][3]
+    # A genuine numeral is meaningful text, not a footnote marker to discard.
+    count = len(calls)
+    response = client.post("/api/suggest", json={"id": "essay", "scope": "The museum opens 1 early on weekends"})
+    assert response.status_code == 400
+    assert len(calls) == count

@@ -547,7 +547,7 @@ let saveTimer = null, saving = Promise.resolve();
 const squash = (t) => t.replace(/[*_`#>\[\]()!^~-]+/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 
 // Where in the markdown a stretch of rendered text starts (formatting marks ignored).
-function indexInSource(src, text) {
+function indexInSource(src, text, textOffset = 0) {
   const words = squash(text).split(" ").filter(Boolean).slice(0, 8);
   // Map each character of the squashed source back to its position in the real source.
   let flat = "", map = [], lastSpace = false;
@@ -559,7 +559,10 @@ function indexInSource(src, text) {
   }
   for (let n = words.length; n >= 2; n--) {
     const at = flat.indexOf(words.slice(0, n).join(" "));
-    if (at >= 0) return map[at];
+    if (at >= 0) {
+      const ahead = textOffset ? squash(text.slice(0, textOffset) + "|").length - 1 : 0;
+      return map[Math.min(at + ahead, map.length - 1)];
+    }
   }
   return -1;
 }
@@ -596,6 +599,23 @@ function ed() {
 // point and the paragraph under it), and lowering the keyboard or tapping away goes back to reading.
 function startEditing(focusTitle, tap) {
   if (!state.doc || state.editing) return;
+  // Save the reading-view caret before any layout or keyboard change.
+  let tappedIndex = null, tappedTop = null;
+  if (tap && tap.block) {
+    let range = document.caretRangeFromPoint ? document.caretRangeFromPoint(tap.x, tap.y) : null;
+    if (!range && document.caretPositionFromPoint) {
+      const point = document.caretPositionFromPoint(tap.x, tap.y);
+      if (point) { range = document.createRange(); range.setStart(point.offsetNode, point.offset); range.collapse(true); }
+    }
+    if (range && tap.block.contains(range.startContainer)) {
+      const prefix = document.createRange(); prefix.selectNodeContents(tap.block);
+      prefix.setEnd(range.startContainer, range.startOffset);
+      const found = indexInSource(state.doc.body, tap.block.textContent, prefix.toString().length);
+      if (found >= 0) tappedIndex = found;
+      const rect = range.getBoundingClientRect();
+      if (rect.height) tappedTop = rect.top;
+    }
+  }
   state.editing = true;
   let place = focusTitle ? null : topBlock(true);
   if (tap && tap.block) place = { block: tap.block, offset: tap.block.getBoundingClientRect().top - $("docScroll").getBoundingClientRect().top };
@@ -632,16 +652,6 @@ function startEditing(focusTitle, tap) {
   // The editor measures lines as it shows them, so the position is set again each frame until it holds.
   let offset = place ? place.offset - shift : 0;
   const exact = () => { scroller.scrollTop = index ? $("mdsrc").offsetTop + e.topOf(index) - offset : 0; };
-  // The cursor goes to the word under their finger.
-  const pick = () => { if (tap) { const p = e.posAt(tap.x, tap.y); if (p != null) e.select(p); } };
-  // When the keyboard comes up over the cursor, the text moves up once, just enough to show it.
-  const aboveKeyboard = () => {
-    const vv = window.visualViewport;
-    const c = vv && e.view.coordsAtPos(e.view.state.selection.main.head);
-    if (!c) return;
-    const over = c.bottom - (vv.height - 24);
-    if (over > 0) { offset -= over; exact(); }
-  };
   // The cursor goes in place before focusing: a phone scrolls to wherever the cursor is when the
   // keyboard opens, and would otherwise jump to the last place the user edited.
   // On a heading the cursor would show its "##" and shift the line; it goes to the text below instead.
@@ -651,19 +661,43 @@ function startEditing(focusTitle, tap) {
     const next = state.doc.body.slice(index).search(/\n\s*\n(?=\S)/);
     if (next >= 0) cursorAt = index + next + state.doc.body.slice(index + next).match(/^\n\s*\n/)[0].length;
   }
-  if (index) e.scrollTo(index, Math.max(offset, 0)); else exact();
+  // Align before resolving the tap. Resolve it ONCE, before focus opens the keyboard:
+  // repeating hit-testing during keyboard animation changes which word is selected.
+  e.select(cursorAt);
+  exact();
+  if (tappedIndex != null) cursorAt = tappedIndex;
+  else if (tap) {
+    const p = e.posAt(tap.x, tap.y);
+    if (p != null) cursorAt = p;
+  }
+  e.select(cursorAt);
+  const caret = e.view.coordsAtPos(cursorAt);
+  const targetTop = tappedTop != null ? tappedTop : caret ? caret.top : tap ? tap.y : scroller.getBoundingClientRect().top;
+  const keepPlace = () => {
+    const c = e.view.coordsAtPos(cursorAt);
+    if (!c) return;
+    const vv = window.visualViewport, r = scroller.getBoundingClientRect();
+    const visibleTop = Math.max(r.top, vv ? vv.offsetTop : 0);
+    const visibleBottom = Math.min(r.bottom, vv ? vv.offsetTop + vv.height : innerHeight);
+    // Keep the original line in place unless the keyboard would cover it.
+    const wanted = Math.max(visibleTop + 8, Math.min(targetTop, visibleBottom - (c.bottom - c.top) - 24));
+    const delta = c.top - wanted;
+    if (Math.abs(delta) > 1) scroller.scrollTop += delta;
+  };
+  // Focus stays synchronous with the double-tap so iOS permits the keyboard to open.
+  cancelEditPosition();
+  const transition = holdScroll(keepPlace);
+  cancelEditPosition = transition;
   e.placeCursor(cursorAt);
-  // Line up each frame until the text has sat still on screen for three frames (or enough have
-  // passed), then show the editor.
   let last = "", still = 0, frames = 0;
   const settle = () => {
-    exact(); pick(); exact();
-    const c = e.view.coordsAtPos(Math.min(e.view.state.selection.main.head, e.view.state.doc.length));
-    const now = `${scroller.scrollTop}/${e.topOf(index)}/${c ? Math.round(c.top) : ""}`;
+    if (!state.editing || !transition.active()) { unfreeze(); return; }
+    keepPlace();
+    const c = e.view.coordsAtPos(cursorAt);
+    const now = `${scroller.scrollTop}/${c ? Math.round(c.top) : ""}`;
     still = now === last ? still + 1 : 0; last = now;
     if (still < 2 && frames++ < 20) { requestAnimationFrame(settle); return; }
     unfreeze();
-    holdScroll(() => { exact(); aboveKeyboard(); });
   };
   requestAnimationFrame(settle);
 }
@@ -686,28 +720,48 @@ function clipFrozen() {
 
 // Keep the editor in place while the phone's keyboard slides up and the browser tries to
 // scroll the cursor into view on its own.
+let cancelEditPosition = () => {};
 function holdScroll(place) {
-  const scroller = $("docScroll");
-  const apply = () => { if (window.scrollY) window.scrollTo(0, 0); place(); };
-  apply();
-  let stop = false;
-  const onResize = () => { if (!stop) apply(); };
-  if (window.visualViewport) visualViewport.addEventListener("resize", onResize);
-  [50, 150, 300, 500, 800].forEach((ms) => setTimeout(() => { if (!stop) apply(); }, ms));
+  const scroller = $("docScroll"), vv = window.visualViewport;
+  let stopped = false, frame = 0;
+  const apply = () => {
+    frame = 0;
+    if (!stopped && state.editing) place();
+  };
+  const schedule = () => { if (!stopped && !frame) frame = requestAnimationFrame(apply); };
   const release = () => {
-    stop = true;
-    if (window.visualViewport) visualViewport.removeEventListener("resize", onResize);
+    stopped = true;
+    cancelAnimationFrame(frame);
+    clearTimeout(deadline);
+    if (vv) { vv.removeEventListener("resize", schedule); vv.removeEventListener("scroll", schedule); }
+    window.removeEventListener("resize", schedule);
+    window.removeEventListener("scroll", schedule);
+    scroller.removeEventListener("scroll", schedule);
     scroller.removeEventListener("touchstart", release);
+    scroller.removeEventListener("pointerdown", release);
+    scroller.removeEventListener("wheel", release);
+    $("mdsrc").removeEventListener("beforeinput", release);
     $("mdsrc").removeEventListener("keydown", release);
   };
-  // Hand scrolling back to them as soon as the user touches or types, and after the keyboard settles.
+  // Observe real geometry changes, rather than fighting the browser at fixed intervals.
+  if (vv) { vv.addEventListener("resize", schedule); vv.addEventListener("scroll", schedule); }
+  window.addEventListener("resize", schedule);
+  window.addEventListener("scroll", schedule, { passive: true });
+  scroller.addEventListener("scroll", schedule, { passive: true });
   scroller.addEventListener("touchstart", release, { passive: true });
+  scroller.addEventListener("pointerdown", release, { passive: true });
+  scroller.addEventListener("wheel", release, { passive: true });
+  $("mdsrc").addEventListener("beforeinput", release);
   $("mdsrc").addEventListener("keydown", release);
-  setTimeout(release, 1000);
+  const deadline = setTimeout(release, 1500);
+  schedule();
+  release.active = () => !stopped;
+  return release;
 }
 
 async function finishEditing() {
   if (!state.editing) return;
+  cancelEditPosition();
   clearTimeout(saveTimer);
   await save();
   state.editing = false;
@@ -1308,6 +1362,7 @@ function reopenInEditor() {
 // Before a suggestion changes the file, what the user has typed is saved first.
 async function saveTyping() {
   if (!state.editing) return;
+  cancelEditPosition();
   clearTimeout(saveTimer);
   await save();
   await saving;
